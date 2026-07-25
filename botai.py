@@ -1,3 +1,8 @@
+import sys
+if 'imghdr' not in sys.modules:
+    import imghdr
+    sys.modules['imghdr'] = imghdr
+
 import os
 import threading
 from flask import Flask
