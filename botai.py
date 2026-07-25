@@ -1,6 +1,6 @@
 import os
 import threading
-import acyncio
+import asyncio
 from flask import Flask
 from datetime import datetime
 from telegram import Update
