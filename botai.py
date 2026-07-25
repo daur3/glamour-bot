@@ -3,7 +3,7 @@ import threading
 from flask import Flask
 from datetime import datetime
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, MessageHandler, CallbackContext, Filters
+from telegram.ext import updater, CommandHandler, MessageHandler, CallbackContext, Filters
 from groq import Groq
 
 # FLASK ДЛЯ RENDER
@@ -60,7 +60,7 @@ def handle_message(update: Update, context: CallbackContext):
         update.message.reply_text(response.choices[0].message.content)
 
 def main():
-    updater = Updater(token=TOKEN, use_context=True)
+    updater = updater(token=TOKEN, use_context=True)
     dp = updater.dispatcher
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
