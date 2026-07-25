@@ -2,7 +2,7 @@ import os
 import threading
 from flask import Flask
 from datetime import datetime
-from telegram import Update
+from telegram import update
 from telegram.ext import updater, CommandHandler, MessageHandler, CallbackContext, Filters
 from groq import Groq
 
