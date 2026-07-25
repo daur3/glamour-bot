@@ -4,6 +4,13 @@ import types
 if 'imghdr' not in sys.modules:
     sys.modules['imghdr'] = types.ModuleType('imghdr')
 
+try:
+    import pkg_resources
+
+except ModuleNotFoundError:
+    import setuptools.pkg_resources as pkg_resources
+    sys.modules['pkg_resourses'] = pkg_resources
+
 import os
 import threading
 from flask import Flask
