@@ -1,7 +1,8 @@
 import sys
+import types
+
 if 'imghdr' not in sys.modules:
-    import imghdr
-    sys.modules['imghdr'] = imghdr
+    sys.modules['imghdr'] = types.ModuleType('imghdr')
 
 import os
 import threading
