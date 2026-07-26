@@ -31,6 +31,7 @@ threading.Thread(target=run_flask, daemon=True).start()
 
 TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+ADMIN_CHAT_ID = 8349612634 # твой ID от @userinfobot
 client = Groq(api_key=GROQ_API_KEY)
 
 user_data = {}
@@ -42,7 +43,7 @@ SERVICES = {
 }
 SERVICES_TEXT = "💎 Добро пожаловать в GLAMOUR!\n\nВыберите услугу:\n1. Маникюр - 6000 тг\n2. Педикюр - 8000 тг\n⏰ Работаем: 10:00 - 21:00"
 
-ADMIN_CHAT_ID = 8349612634 # твой ID от @userinfobot
+
 
 def save_to_file(user_id, data, context):
     service_name = SERVICES.get(data['service'], data['service'])
