@@ -12,6 +12,13 @@ from groq import Groq
 if 'imghdr' not in sys.modules:
     sys.modules['imghdr'] = types.ModuleType('imghdr')
 
+try:
+    import pkg_resources
+
+except ModuleNotFoundError:
+    import setuptools.pkg_resources as pkg_resources
+    sys.modules['pkg_resourses'] = pkg_resources
+
 app = Flask(__name__)
 @app.route('/')
 def home():
