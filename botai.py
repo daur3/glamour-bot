@@ -45,9 +45,16 @@ SERVICES_TEXT = "💎 Добро пожаловать в GLAMOUR!\n\nВыбер�
 
 
 
-def save_to_file(user_id, data, context):
+def save_to_file(user_id, data, context): # <- context тут должен быть
     service_name = SERVICES.get(data['service'], data['service'])
-    admin_message = f"🔔 НОВАЯ ЗАЯВКА!\n\n👤 {data['name']}\n📞 {data['phone']}\n💅 {service_name}"
+    
+    admin_message = (
+        f"🔔 НОВАЯ ЗАЯВКА В GLAMOUR!\n\n"
+        f"👤 Имя: {data['name']}\n"
+        f"📞 Телефон: {data['phone']}\n"
+        f"💅 Услуга: {service_name}\n"
+        f"⏰ Время: {datetime.now().strftime('%H:%M %d.%m.%Y')}"
+    )
     context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=admin_message)
 
 def start(update: Update, context: CallbackContext):
