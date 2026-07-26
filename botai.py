@@ -1,25 +1,17 @@
 import sys
 import types
-
-if 'imghdr' not in sys.modules:
-    sys.modules['imghdr'] = types.ModuleType('imghdr')
-
-try:
-    import pkg_resources
-
-except ModuleNotFoundError:
-    import setuptools.pkg_resources as pkg_resources
-    sys.modules['pkg_resourses'] = pkg_resources
-
 import os
 import threading
 from flask import Flask
 from datetime import datetime
-from telegram import Update
+from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, CallbackContext, Filters
 from groq import Groq
 
-# FLASK ДЛЯ RENDER
+# ФИКС ДЛЯ RENDER
+if 'imghdr' not in sys.modules:
+    sys.modules['imghdr'] = types.ModuleType('imghdr')
+
 app = Flask(__name__)
 @app.route('/')
 def home():
@@ -34,41 +26,69 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 client = Groq(api_key=GROQ_API_KEY)
 
 user_data = {}
-SERVICES = "УСЛУГИ САЛОНА GLAMOUR:\n1. Маникюр - 6000 тг\n2. Педикюр - 8000 тг\nРаботаем: 10:00 - 21:00\n"
+
+# 1. СДЕЛАЛИ КРАСИВОЕ МЕНЮ
+SERVICES = {
+    "1": "Маникюр - 6000 тг",
+    "2": "Педикюр - 8000 тг"
+}
+SERVICES_TEXT = "💎 Добро пожаловать в GLAMOUR!\n\nВыберите услугу:\n1. Маникюр - 6000 тг\n2. Педикюр - 8000 тг\n⏰ Работаем: 10:00 - 21:00"
 
 def save_to_file(user_id, data):
     with open("zayavki.txt", "a", encoding="utf-8") as f:
-        f.write(f"{datetime.now()} | ID:{user_id} | {data}\n")
+        service_name = SERVICES.get(data['service'], data['service'])
+        f.write(f"{datetime.now()} | ID:{user_id} | Имя:{data['name']} | Тел:{data['phone']} | Услуга:{service_name}\n")
 
 def start(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     user_data[user_id] = {"step": "start"}
-    update.message.reply_text("Привет! " + SERVICES + "\n\nВыберите услугу цифрой:")
+
+    # 2. ДОБАВИЛИ КНОПКИ
+    keyboard = [['1', '2']]
+    reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+    update.message.reply_text(SERVICES_TEXT, reply_markup=reply_markup)
 
 def handle_message(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     text = update.message.text
-    if user_id not in user_data: user_data[user_id] = {"step": "start"}
+
+    if user_id not in user_data:
+        user_data[user_id] = {"step": "start"}
     step = user_data[user_id]["step"]
-    
+
     if step == "start":
+        if text not in SERVICES:
+            update.message.reply_text("Пожалуйста, выберите 1 или 2")
+            return
         user_data[user_id]["service"] = text
         user_data[user_id]["step"] = "name"
         update.message.reply_text("Как вас зовут?")
+
     elif step == "name":
         user_data[user_id]["name"] = text
         user_data[user_id]["step"] = "phone"
         update.message.reply_text("И ваш номер телефона?")
+
     elif step == "phone":
         user_data[user_id]["phone"] = text
         data = user_data[user_id]
         save_to_file(user_id, data)
-        update.message.reply_text(f"✅ Готово! Вы записаны!\nУслуга: {data['service']}")
+
+        # 3. ИСПРАВИЛИ ВЫВОД УСЛУГИ
+        service_name = SERVICES.get(data['service'], data['service'])
+
+        update.message.reply_text(
+            f"✅ Готово, {data['name']}!\n\n"
+            f"Вы записаны на: {service_name}\n"
+            f"Мы свяжемся с вами для подтверждения времени.\n\n"
+            f"GLAMOUR - ждем вас! 💅"
+        )
         user_data[user_id] = {"step": "start"}
-    else:
+
+    else: # ИИ для остальных вопросов
         response = client.chat.completions.create(
-            model="llama-3.1-8b-instant", 
-            messages=[{"role": "system", "content": f"Ты админ салона Glamour. {SERVICES}"}, {"role": "user", "content": text}]
+            model="llama-3.1-8b-instant",
+            messages=[{"role": "system", "content": f"Ты админ салона Glamour. Услуги: {SERVICES_TEXT}. Отвечай вежливо и коротко."}, {"role": "user", "content": text}]
         )
         update.message.reply_text(response.choices[0].message.content)
 
