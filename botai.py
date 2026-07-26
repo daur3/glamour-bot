@@ -45,7 +45,7 @@ SERVICES_TEXT = "💎 Добро пожаловать в GLAMOUR!\n\nВыбер�
 
 
 
-def save_to_file(user_id, data): # <- context тут должен быть
+def save_to_file(user_id, data, context): # <- ДОЛЖНО БЫТЬ 3 АРГУМЕНТА
     service_name = SERVICES.get(data['service'], data['service'])
     
     admin_message = (
@@ -55,7 +55,11 @@ def save_to_file(user_id, data): # <- context тут должен быть
         f"💅 Услуга: {service_name}\n"
         f"⏰ Время: {datetime.now().strftime('%H:%M %d.%m.%Y')}"
     )
-    context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=admin_message)
+    try:
+        context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=admin_message)
+        print("Заявка отправлена админу!")
+    except Exception as e:
+        print(f"Ошибка отправки админу: {e}")
 
 def start(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
