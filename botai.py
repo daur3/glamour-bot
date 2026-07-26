@@ -42,10 +42,12 @@ SERVICES = {
 }
 SERVICES_TEXT = "💎 Добро пожаловать в GLAMOUR!\n\nВыберите услугу:\n1. Маникюр - 6000 тг\n2. Педикюр - 8000 тг\n⏰ Работаем: 10:00 - 21:00"
 
-def save_to_file(user_id, data):
-    with open("zayavki.txt", "a", encoding="utf-8") as f:
-        service_name = SERVICES.get(data['service'], data['service'])
-        f.write(f"{datetime.now()} | ID:{user_id} | Имя:{data['name']} | Тел:{data['phone']} | Услуга:{service_name}\n")
+ADMIN_CHAT_ID = 8349612634 # твой ID от @userinfobot
+
+def save_to_file(user_id, data, context):
+    service_name = SERVICES.get(data['service'], data['service'])
+    admin_message = f"🔔 НОВАЯ ЗАЯВКА!\n\n👤 {data['name']}\n📞 {data['phone']}\n💅 {service_name}"
+    context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=admin_message)
 
 def start(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
