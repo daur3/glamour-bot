@@ -45,7 +45,7 @@ SERVICES_TEXT = "💎 Добро пожаловать в GLAMOUR!\n\nВыбер�
 
 
 
-def save_to_file(user_id, data, context): # <- context тут должен быть
+def save_to_file(user_id, data): # <- context тут должен быть
     service_name = SERVICES.get(data['service'], data['service'])
     
     admin_message = (
@@ -69,46 +69,49 @@ def start(update: Update, context: CallbackContext):
 def handle_message(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     text = update.message.text
+    try:
+        if user_id not in user_data:
+            user_data[user_id] = {"step": "start"}
+        step = user_data[user_id]["step"]
 
-    if user_id not in user_data:
-        user_data[user_id] = {"step": "start"}
-    step = user_data[user_id]["step"]
+        if step == "start":
+            if text not in SERVICES:
+                update.message.reply_text("Пожалуйста, выберите 1 или 2")
+                return
+            user_data[user_id]["service"] = text
+            user_data[user_id]["step"] = "name"
+            update.message.reply_text("Как вас зовут?")
 
-    if step == "start":
-        if text not in SERVICES:
-            update.message.reply_text("Пожалуйста, выберите 1 или 2")
-            return
-        user_data[user_id]["service"] = text
-        user_data[user_id]["step"] = "name"
-        update.message.reply_text("Как вас зовут?")
+        elif step == "name":
+            user_data[user_id]["name"] = text
+            user_data[user_id]["step"] = "phone"
+            update.message.reply_text("И ваш номер телефона?")
 
-    elif step == "name":
-        user_data[user_id]["name"] = text
-        user_data[user_id]["step"] = "phone"
-        update.message.reply_text("И ваш номер телефона?")
+        elif step == "phone":
+            user_data[user_id]["phone"] = text
+            data = user_data[user_id]
+            
+            save_to_file(user_id, data, context) # <- отправка админу
 
-    elif step == "phone":
-        user_data[user_id]["phone"] = text
-        data = user_data[user_id]
-        save_to_file(user_id, data)
+            service_name = SERVICES.get(data['service'], data['service'])
+            update.message.reply_text(
+                f"✅ Готово, {data['name']}!\n\n"
+                f"Вы записаны на: {service_name}\n"
+                f"Мы свяжемся с вами для подтверждения времени.\n\n"
+                f"GLAMOUR - ждем вас! 💅"
+            )
+            user_data[user_id] = {"step": "start"}
 
-        # 3. ИСПРАВИЛИ ВЫВОД УСЛУГИ
-        service_name = SERVICES.get(data['service'], data['service'])
-
-        update.message.reply_text(
-            f"✅ Готово, {data['name']}!\n\n"
-            f"Вы записаны на: {service_name}\n"
-            f"Мы свяжемся с вами для подтверждения времени.\n\n"
-            f"GLAMOUR - ждем вас! 💅"
-        )
-        user_data[user_id] = {"step": "start"}
-
-    else: # ИИ для остальных вопросов
-        response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[{"role": "system", "content": f"Ты админ салона Glamour. Услуги: {SERVICES_TEXT}. Отвечай вежливо и коротко."}, {"role": "user", "content": text}]
-        )
-        update.message.reply_text(response.choices[0].message.content)
+        else:
+            response = client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=[{"role": "system", "content": f"Ты админ салона Glamour. Услуги: {SERVICES_TEXT}. Отвечай вежливо и коротко."}, {"role": "user", "content": text}]
+            )
+            update.message.reply_text(response.choices[0].message.content)
+    
+    except Exception as e:
+        print(f"Ошибка: {e}")
+        update.message.reply_text("Упс, что-то пошло не так. Попробуйте еще раз /start")
 
 def main():
     updater = Updater(token=TOKEN, use_context=True)
