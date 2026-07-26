@@ -1,12 +1,5 @@
 import sys
 import types
-import os
-import threading
-from flask import Flask
-from datetime import datetime
-from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, MessageHandler, CallbackContext, Filters
-from groq import Groq
 
 # ФИКС ДЛЯ RENDER
 if 'imghdr' not in sys.modules:
@@ -18,6 +11,14 @@ try:
 except ModuleNotFoundError:
     import setuptools.pkg_resources as pkg_resources
     sys.modules['pkg_resourses'] = pkg_resources
+
+import os
+import threading
+from flask import Flask
+from datetime import datetime
+from telegram import Update, ReplyKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, MessageHandler, CallbackContext, Filters
+from groq import Groq
 
 app = Flask(__name__)
 @app.route('/')
